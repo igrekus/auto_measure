@@ -42,9 +42,13 @@ class MainWindow(QMainWindow):
         self._ui.tabWidget.insertTab(0, self._plotWidget, 'Прогресс измерения')
 
         # specific UI tweaks
+        self._measureWidget._ui._paramInputWidget.hide()
+        self._measureWidget._ui.grpParams.setTitle('Управление')
         self._measureWidget._ui.btnCalibrateLO.hide()
         self._measureWidget._ui.btnCalibrateMod.hide()
         self._measureWidget._ui.btnCalibrateRF.hide()
+
+        self._ui.grpProgress.hide()
 
         self._init()
 
