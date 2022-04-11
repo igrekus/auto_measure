@@ -11,9 +11,11 @@ from PyQt5.QtCore import Qt, pyqtSignal, pyqtSlot
 
 from formlayout.formlayout import fedit
 from instrumentcontroller import InstrumentController
+from measuremodel import MeasureModel
 from measurewidgetwithsecondaryparams import MeasureWidgetWithSecondaryParameters
 from mytools.connectionwidget import ConnectionWidget
 from primaryplotwidget import PrimaryPlotWidget
+from resulttablewidget import ResultTableWidget
 
 
 class MainWindow(QMainWindow):
@@ -33,6 +35,9 @@ class MainWindow(QMainWindow):
         self._measureWidget = MeasureWidgetWithSecondaryParameters(parent=self, controller=self._instrumentController)
         self._plotWidget = PrimaryPlotWidget(parent=self, controller=self._instrumentController)
 
+        self._resultNodel = MeasureModel(parent=self)
+        self._resultTableWidget = ResultTableWidget(parent=self, controller=self._instrumentController)
+
         # init UI
         self._ui = uic.loadUi('mainwindow.ui', self)
         self.setWindowTitle('Измерение ГУНов')
@@ -40,6 +45,7 @@ class MainWindow(QMainWindow):
         self._ui.layInstrs.insertWidget(0, self._connectionWidget)
         self._ui.layInstrs.insertWidget(1, self._measureWidget)
         self._ui.tabWidget.insertTab(0, self._plotWidget, 'Прогресс измерения')
+        self._ui.tabWidget.addTab(self._resultTableWidget, 'Расчетные параметры')
 
         # specific UI tweaks
         self._measureWidget._ui._paramInputWidget.hide()
