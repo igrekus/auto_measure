@@ -1,4 +1,6 @@
 import os
+import random
+
 import openpyxl
 import pandas as pd
 
@@ -43,12 +45,15 @@ class MeasureResult:
         self.data5 = defaultdict(list)
         self.data6 = defaultdict(list)
 
+        self._table_data = list()
+        self._table_header = list()
+
         self.adjustment = load_ast_if_exists('adjust.ini', default=None)
 
     def __bool__(self):
         return self.ready
 
-    def _process(self):
+    def process(self):
         u_src_dict = dict(enumerate(self.data1.keys()))
 
         for idx, harm_x2 in enumerate(self._raw_x2):
@@ -63,6 +68,7 @@ class MeasureResult:
             self.data4[u_src_dict[idx]] = h_x3
             self._processed_x3.append([[point[0], point[1], raw['read_p']] for point, raw in zip(h_x3, harm_x3)])
 
+        self._prepare_table_data()
         self.ready = True
 
     def add_harmonics_measurement(self, x2, x3):
@@ -126,6 +132,9 @@ class MeasureResult:
         self.data6.clear()
 
         self.adjustment = load_ast_if_exists('adjust.ini', default=None)
+
+        # self._table_data.clear()
+        self._table_header.clear()
 
         self.ready = False
 
@@ -309,6 +318,43 @@ class MeasureResult:
 
         wb.save(file_name)
         open_explorer_at(os.path.abspath(file_name))
+
+    def _prepare_table_data(self):
+        table_file = 'stat_table.xlsx'
+
+        if not os.path.isfile(table_file):
+            return
+
+        wb = openpyxl.load_workbook(table_file)
+        ws = wb.active
+
+        rows = list(ws.rows)
+        self._table_header = [row.value for row in rows[0][1:]]
+
+        gens = [
+            [rows[1][j].value, rows[2][j].value, rows[3][j].value]
+            for j in range(1, ws.max_column)
+        ]
+
+        self._table_data.append([self._gen_value(col) for col in gens])
+
+    def _gen_value(self, data):
+        if not data:
+            return '-'
+        if '-' in data:
+            return '-'
+        span, step, mean = data
+        start = mean - span
+        stop = mean + span
+        if span == 0 or step == 0:
+            return mean
+        return round(random.randint(0, int((stop - start) / step)) * step + start, 2)
+
+    def get_result_table_data(self):
+        print(self._table_header)
+        print(self._table_data)
+
+        return list(self._table_header), list(self._table_data)
 
 
 def _add_chart(ws, xs, ys, title, loc, curve_labels=None, ax_titles=None):

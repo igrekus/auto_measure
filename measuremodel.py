@@ -24,7 +24,7 @@ class MeasureModel(QAbstractTableModel):
     def rowCount(self, parent=None, *args, **kwargs):
         if parent.isValid():
             return 0
-        return 1
+        return len(self._data)
 
     def columnCount(self, parent=None, *args, **kwargs):
         return len(self._header)
@@ -33,8 +33,10 @@ class MeasureModel(QAbstractTableModel):
         if not index.isValid():
             return QVariant()
         if role == Qt.DisplayRole:
+            row = index.row()
+            col = index.column()
             try:
-                return QVariant(self._data[index.column()])
+                return QVariant(self._data[row][col])
             except LookupError:
                 return QVariant()
         return QVariant()

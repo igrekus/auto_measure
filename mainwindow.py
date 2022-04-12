@@ -96,8 +96,9 @@ class MainWindow(QMainWindow):
     @pyqtSlot()
     def on_measureComplete(self):
         print('meas complete')
-        self._instrumentController.result._process()
+        self._instrumentController.result.process()
         self._plotWidget.plot()
+        self._resultTableWidget.updateResult()
         self._instrumentController.result.save_adjustment_template()
 
     @pyqtSlot()
