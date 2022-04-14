@@ -93,25 +93,8 @@ class InstrumentController(QObject):
                 'Span=',
                 {'start': 0.0, 'end': 30000.0, 'step': 1.0, 'value': 50.0, 'suffix': ' МГц'}
             ],
-            'sep_3': ['', {'value': None}],
-            'file_name': [
-                'Имя файла=',
-                {'value': 'test', }
-            ],
-            # 'is_harm_relative': [
-            #     'Отн.ур.гармоник',
-            #     {'value': False}
-            # ],
-            # 'is_u_src_drift': [
-            #     'Дрейф от Uп',
-            #     {'value': False}
-            # ],
         })
         self.secondaryParams.load_from_config('params.ini')
-
-        self._calibrated_pows_lo = load_ast_if_exists('cal_lo.ini', default={})
-        self._calibrated_pows_mod = load_ast_if_exists('cal_mod.ini', default={})
-        self._calibrated_pows_rf = load_ast_if_exists('cal_rf.ini', default={})
 
         self._instruments = dict()
         self.found = False
@@ -148,30 +131,6 @@ class InstrumentController(QObject):
         return True
     # endregion
 
-    # region calibrations
-    def calibrate(self, token, params):
-        print(f'call calibrate with {token} {params}')
-        return self._calibrate(token, self.secondaryParams)
-
-    def _calibrateLO(self, token, secondary):
-        print('run calibrate LO with', secondary)
-        result = {}
-        self._calibrated_pows_lo = result
-        return True
-
-    def _calibrateRF(self, token, secondary):
-        print('run calibrate RF')
-        result = {}
-        self._calibrated_pows_rf = result
-        return True
-
-    def _calibrateMod(self, token, secondary):
-        print('calibrate mod gen')
-        result = {}
-        self._calibrated_pows_mod = result
-        return True
-    # endregion
-
     # region initialization
     def _clear(self):
         self.result.clear()
@@ -199,8 +158,7 @@ class InstrumentController(QObject):
         print(f'launch measure with {token} {param} {secondary}')
 
         self._clear()
-        _, x2, x3 = self._measure_tune(token, param, secondary)
-        self.result.add_harmonics_measurement(x2, x3)
+        _ = self._measure_tune(token, param, secondary)
         self.result.set_secondary_params(self.secondaryParams)
         return True
 
@@ -222,57 +180,6 @@ class InstrumentController(QObject):
             freq = float(sa.query(':CALC:MARK1:X?'))
             pow_ = float(sa.query(':CALC:MARK1:Y?'))
             return freq, pow_
-
-        def measure_harmonics(multiplier, pairs, offset, u_drift):
-            print('measure harmonics:', multiplier)
-            sa.send(f':SENS:FREQ:SPAN {sa_span}HZ')
-            r = []
-            for uc, f in pairs:
-
-                if token.cancelled:
-                    src.send('OUTP OFF')
-                    sa.send(':CAL:AUTO ON')
-                    raise RuntimeError('measurement cancelled')
-
-                src.send(f'APPLY p6v,{u_src_drift_1}V,{i_src_max}A')
-                src.send(f'APPLY p25v,{uc}V,{i_tune_max}A')
-
-                if not mock_enabled:
-                    time.sleep(1.5)
-
-                sa.send(f'DISP:WIND:TRAC:X:OFFS {0}Hz')
-                sa.send(f'DISP:WIND:TRAC:Y:RLEV:OFFS {0}db')
-
-                x_off, y_off = offset.get(u_drift, {}).get(uc, (0, 0))
-                x_off *= MEGA
-                f -= x_off
-                f_xmul = f * multiplier
-
-                sa.send(f':SENS:FREQ:CENT {f_xmul}Hz')
-                sa.send(f':SENS:FREQ:SPAN {sa_span}HZ')
-
-                sa.send(f'DISP:WIND:TRAC:X:OFFS {x_off * multiplier}Hz')
-                # sa.send(f'DISP:WIND:TRAC:Y:RLEV:OFFS {y_off}db')
-
-                if not mock_enabled:
-                    time.sleep(0.3)
-
-                sa.send('CALC:MARK1:MAX')
-
-                if not mock_enabled:
-                    time.sleep(0.3)
-
-                read_p = float(sa.query(f'CALC:MARK1:Y?'))
-                # x1 = 1.747 G -> x1 + 1 G = 2.747
-                # x2 = 3.497 G -> x2 + 1 G = 4.497
-
-                point = {
-                    'u_control': uc,
-                    'read_p': read_p,
-                }
-                r.append(point)
-
-            return r
 
         src = self._instruments['Источник']
         sa = self._instruments['Анализатор']
@@ -379,76 +286,16 @@ class InstrumentController(QObject):
             if not mock_enabled:
                 time.sleep(5)
 
-        with open('out.txt', mode='wt', encoding='utf-8') as out_file:
-            out_file.write(str(result))
+        # with open('out.txt', mode='wt', encoding='utf-8') as out_file:
+        #     out_file.write(str(result))
 
         offs_template = pd.DataFrame([{'Vcc': r['u_src'], 'Vctr': r['u_control'], 'Freq offs': 0, 'Pow offs': 0} for r in result])
         offs_template.to_excel('template.xlsx', engine='openpyxl', index=False)
 
-        # -- measure harmonics --
-
-        harm_x2_totals = []
-        harm_x3_totals = []
-
-        pairs = [[row['u_control'], row['read_f']] for row in result if row['u_src'] == u_src_drift_1]
-        result_harmonics_x2 = measure_harmonics(multiplier=2, pairs=pairs, offset=offset, u_drift=u_src_drift_1)
-        result_harmonics_x3 = measure_harmonics(multiplier=3, pairs=pairs, offset=offset, u_drift=u_src_drift_1)
-
-        if mock_enabled:
-            with open('./mock_data/x2_1.txt', mode='rt', encoding='utf-8') as f:
-                result_harmonics_x2 = ast.literal_eval(''.join(f.readlines()))
-            with open('./mock_data/x3_2.txt', mode='rt', encoding='utf-8') as f:
-                result_harmonics_x3 = ast.literal_eval(''.join(f.readlines()))
-
-        harm_x2_totals.append(result_harmonics_x2)
-        harm_x3_totals.append(result_harmonics_x3)
-        with open('./x2_1.txt', mode='wt', encoding='utf-8') as f:
-            f.writelines(str(result_harmonics_x2))
-        with open('./x3_1.txt', mode='wt', encoding='utf-8') as f:
-            f.writelines(str(result_harmonics_x3))
-
-        if u_src_drift_2:
-            pairs = [[row['u_control'], row['read_f']] for row in result if row['u_src'] == u_src_drift_2]
-            result_harmonics_x2 = measure_harmonics(multiplier=2, pairs=pairs, offset=offset, u_drift=u_src_drift_2)
-            result_harmonics_x3 = measure_harmonics(multiplier=3, pairs=pairs, offset=offset, u_drift=u_src_drift_2)
-
-            if mock_enabled:
-                with open('./mock_data/x2_2.txt', mode='rt', encoding='utf-8') as f:
-                    result_harmonics_x2 = ast.literal_eval(''.join(f.readlines()))
-                with open('./mock_data/x3_2.txt', mode='rt', encoding='utf-8') as f:
-                    result_harmonics_x3 = ast.literal_eval(''.join(f.readlines()))
-
-            harm_x2_totals.append(result_harmonics_x2)
-            harm_x3_totals.append(result_harmonics_x3)
-            with open('./x2_2.txt', mode='wt', encoding='utf-8') as f:
-                f.writelines(str(result_harmonics_x2))
-            with open('./x3_2.txt', mode='wt', encoding='utf-8') as f:
-                f.writelines(str(result_harmonics_x3))
-
-        if u_src_drift_3:
-            pairs = [[row['u_control'], row['read_f']] for row in result if row['u_src'] == u_src_drift_3]
-            result_harmonics_x2 = measure_harmonics(multiplier=2, pairs=pairs, offset=offset, u_drift=u_src_drift_3)
-            result_harmonics_x3 = measure_harmonics(multiplier=3, pairs=pairs, offset=offset, u_drift=u_src_drift_3)
-
-            if mock_enabled:
-                with open('./mock_data/x2_3.txt', mode='rt', encoding='utf-8') as f:
-                    result_harmonics_x2 = ast.literal_eval(''.join(f.readlines()))
-                with open('./mock_data/x3_3.txt', mode='rt', encoding='utf-8') as f:
-                    result_harmonics_x3 = ast.literal_eval(''.join(f.readlines()))
-
-            harm_x2_totals.append(result_harmonics_x2)
-            harm_x3_totals.append(result_harmonics_x3)
-            with open('./x2_3.txt', mode='wt', encoding='utf-8') as f:
-                f.writelines(str(result_harmonics_x2))
-            with open('./x3_3.txt', mode='wt', encoding='utf-8') as f:
-                f.writelines(str(result_harmonics_x3))
-
-        # endregion
-
         src.send('OUTPut OFF')
         sa.send(':CAL:AUTO ON')
 
-        return result, harm_x2_totals, harm_x3_totals
+        return result
 
     def _add_measure_point(self, data):
         print('measured point:', data)

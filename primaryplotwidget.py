@@ -34,15 +34,11 @@ class PrimaryPlotWidget(QWidget):
         self._plot_00 = self._win.addPlot(row=0, col=0)
         self._plot_01 = self._win.addPlot(row=0, col=1)
         self._plot_02 = self._win.addPlot(row=0, col=2)
-        self._plot_10 = self._win.addPlot(row=1, col=0)
-        self._plot_11 = self._win.addPlot(row=1, col=1)
         self._plot_12 = self._win.addPlot(row=1, col=2)
 
         self._curves_00 = dict()
         self._curves_01 = dict()
         self._curves_02 = dict()
-        self._curves_10 = dict()
-        self._curves_11 = dict()
         self._curves_12 = dict()
 
         self._plot_00.setLabel('left', 'Fвых, МГц', **self.label_style)
@@ -86,34 +82,6 @@ class PrimaryPlotWidget(QWidget):
         self._plot_02.addItem(self._vLine_02, ignoreBounds=True)
         self._plot_02.addItem(self._hLine_02, ignoreBounds=True)
         self._proxy_02 = pg.SignalProxy(self._plot_02.scene().sigMouseMoved, rateLimit=60, slot=self.mouseMoved_02)
-
-        self._plot_10.setLabel('left', 'P гарм 2 отн', **self.label_style)
-        self._plot_10.setLabel('bottom', 'Uупр, В', **self.label_style)
-        self._plot_10.enableAutoRange('x')
-        self._plot_10.enableAutoRange('y')
-        self._plot_10.showGrid(x=True, y=True)
-        self._vb_10 = self._plot_10.vb
-        rect = self._vb_10.viewRect()
-        self._plot_10.addLegend(offset=(rect.x() + rect.width() - 50, rect.y() + 30))
-        self._vLine_10 = pg.InfiniteLine(angle=90, movable=False)
-        self._hLine_10 = pg.InfiniteLine(angle=0, movable=False)
-        self._plot_10.addItem(self._vLine_10, ignoreBounds=True)
-        self._plot_10.addItem(self._hLine_10, ignoreBounds=True)
-        self._proxy_10 = pg.SignalProxy(self._plot_10.scene().sigMouseMoved, rateLimit=60, slot=self.mouseMoved_10)
-
-        self._plot_11.setLabel('left', 'P гарм 3 отн', **self.label_style)
-        self._plot_11.setLabel('bottom', 'Uупр, В', **self.label_style)
-        self._plot_11.enableAutoRange('x')
-        self._plot_11.enableAutoRange('y')
-        self._plot_11.showGrid(x=True, y=True)
-        self._vb_11 = self._plot_11.vb
-        rect = self._vb_11.viewRect()
-        self._plot_11.addLegend(offset=(rect.x() + rect.width() - 50, rect.y() + 30))
-        self._vLine_11 = pg.InfiniteLine(angle=90, movable=False)
-        self._hLine_11 = pg.InfiniteLine(angle=0, movable=False)
-        self._plot_11.addItem(self._vLine_11, ignoreBounds=True)
-        self._plot_11.addItem(self._hLine_11, ignoreBounds=True)
-        self._proxy_11 = pg.SignalProxy(self._plot_11.scene().sigMouseMoved, rateLimit=60, slot=self.mouseMoved_11)
 
         self._plot_12.setLabel('left', 'Чувств., МГц/В', **self.label_style)
         self._plot_12.setLabel('bottom', 'Uупр, В', **self.label_style)
@@ -179,38 +147,6 @@ class PrimaryPlotWidget(QWidget):
                 for p, curve in self._curves_02.items()
             ]))
 
-    def mouseMoved_10(self, event):
-        pos = event[0]
-        if self._plot_10.sceneBoundingRect().contains(pos):
-            mouse_point = self._vb_10.mapSceneToView(pos)
-            x = mouse_point.x()
-            y = mouse_point.y()
-            self._vLine_10.setPos(x)
-            self._hLine_10.setPos(y)
-            if not self._curves_10:
-                return
-
-            self._stat_label.setText(_label_text(x, y, [
-                [p, curve.yData[_find_value_index(curve.xData, x)]]
-                for p, curve in self._curves_10.items()
-            ]))
-
-    def mouseMoved_11(self, event):
-        pos = event[0]
-        if self._plot_11.sceneBoundingRect().contains(pos):
-            mouse_point = self._vb_11.mapSceneToView(pos)
-            x = mouse_point.x()
-            y = mouse_point.y()
-            self._vLine_11.setPos(x)
-            self._hLine_11.setPos(y)
-            if not self._curves_11:
-                return
-
-            self._stat_label.setText(_label_text(x, y, [
-                [p, curve.yData[_find_value_index(curve.xData, x)]]
-                for p, curve in self._curves_11.items()
-            ]))
-
     def mouseMoved_12(self, event):
         pos = event[0]
         if self._plot_12.sceneBoundingRect().contains(pos):
@@ -235,15 +171,11 @@ class PrimaryPlotWidget(QWidget):
         _remove_curves(self._plot_00, self._curves_00)
         _remove_curves(self._plot_01, self._curves_01)
         _remove_curves(self._plot_02, self._curves_02)
-        _remove_curves(self._plot_10, self._curves_10)
-        _remove_curves(self._plot_11, self._curves_11)
         _remove_curves(self._plot_12, self._curves_12)
 
         self._curves_00.clear()
         self._curves_01.clear()
         self._curves_02.clear()
-        self._curves_10.clear()
-        self._curves_11.clear()
         self._curves_12.clear()
 
     def plot(self):
@@ -251,8 +183,6 @@ class PrimaryPlotWidget(QWidget):
         _plot_curves(self._controller.result.data1, self._curves_00, self._plot_00, prefix='Uпит= ', suffix=' В')
         _plot_curves(self._controller.result.data2, self._curves_01, self._plot_01, prefix='Uпит= ', suffix=' В')
         _plot_curves(self._controller.result.data5, self._curves_02, self._plot_02, prefix='Uпит= ', suffix=' В')
-        _plot_curves(self._controller.result.data3, self._curves_10, self._plot_10, prefix='Uпит= ', suffix=' В')
-        _plot_curves(self._controller.result.data4, self._curves_11, self._plot_11, prefix='Uпит= ', suffix=' В')
         _plot_curves(self._controller.result.data6, self._curves_12, self._plot_12, prefix='Uпит= ', suffix=' В')
 
 

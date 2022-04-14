@@ -27,21 +27,15 @@ class MeasureResult:
     def __init__(self):
         self._secondaryParams = dict()
         self._raw = list()
-        self._raw_x2 = list()
-        self._raw_x3 = list()
 
         self._report = dict()
 
         self._processed = list()
-        self._processed_x2 = list()
-        self._processed_x3 = list()
 
         self.ready = False
 
         self.data1 = defaultdict(list)
         self.data2 = defaultdict(list)
-        self.data3 = dict()
-        self.data4 = dict()
         self.data5 = defaultdict(list)
         self.data6 = defaultdict(list)
 
@@ -54,26 +48,8 @@ class MeasureResult:
         return self.ready
 
     def process(self):
-        u_src_dict = dict(enumerate(self.data1.keys()))
-
-        for idx, harm_x2 in enumerate(self._raw_x2):
-            h_x2 = [list(d.values()) for d in harm_x2]
-            h_x2 = _find_deltas(h_x2, self._processed)
-            self.data3[u_src_dict[idx]] = h_x2
-            self._processed_x2.append([[point[0], point[1], raw['read_p']] for point, raw in zip(h_x2, harm_x2)])
-
-        for idx, harm_x3 in enumerate(self._raw_x3):
-            h_x3 = [list(d.values()) for d in harm_x3]
-            h_x3 = _find_deltas(h_x3, self._processed)
-            self.data4[u_src_dict[idx]] = h_x3
-            self._processed_x3.append([[point[0], point[1], raw['read_p']] for point, raw in zip(h_x3, harm_x3)])
-
         self._prepare_table_data()
         self.ready = True
-
-    def add_harmonics_measurement(self, x2, x3):
-        self._raw_x2 = list(x2)
-        self._raw_x3 = list(x3)
 
     def _process_point(self, data):
         u_src = data['u_src']
@@ -115,19 +91,13 @@ class MeasureResult:
     def clear(self):
         self._secondaryParams.clear()
         self._raw.clear()
-        self._raw_x2.clear()
-        self._raw_x3.clear()
 
         self._report.clear()
 
         self._processed.clear()
-        self._processed_x2.clear()
-        self._processed_x3.clear()
 
         self.data1.clear()
         self.data2.clear()
-        self.data3.clear()
-        self.data4.clear()
         self.data5.clear()
         self.data6.clear()
 
@@ -320,7 +290,7 @@ class MeasureResult:
         open_explorer_at(os.path.abspath(file_name))
 
     def _prepare_table_data(self):
-        table_file = 'stat_table.xlsx'
+        table_file = './tables/stat_table.xlsx'
 
         if not os.path.isfile(table_file):
             return
@@ -353,7 +323,6 @@ class MeasureResult:
     def get_result_table_data(self):
         print(self._table_header)
         print(self._table_data)
-
         return list(self._table_header), list(self._table_data)
 
 
