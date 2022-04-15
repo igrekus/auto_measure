@@ -42,8 +42,6 @@ class MeasureResult:
         self._table_data = list()
         self._table_header = list()
 
-        self.adjustment = load_ast_if_exists('adjust.ini', default=None)
-
     def __bool__(self):
         return self.ready
 
@@ -58,12 +56,6 @@ class MeasureResult:
         f_tune = data['read_f'] / MEGA
         p_out = data['read_p']
         i_src = data['read_i'] / MILLI
-
-        if self.adjustment is not None:
-            point = self.adjustment[len(self._processed)]
-            f_tune += point['f_tune']
-            p_out += point['p_out']
-            i_src += point['i_src']
 
         self._report = {
             'u_src': u_src,
@@ -101,8 +93,6 @@ class MeasureResult:
         self.data5.clear()
         self.data6.clear()
 
-        self.adjustment = load_ast_if_exists('adjust.ini', default=None)
-
         # self._table_data.clear()
         self._table_header.clear()
 
@@ -114,18 +104,6 @@ class MeasureResult:
     def add_point(self, data):
         self._raw.append(data)
         self._process_point(data)
-
-    def save_adjustment_template(self):
-        if self.adjustment is None:
-            print('measured, saving template')
-            self.adjustment = [{
-                'u_src': p['u_src'],
-                'u_control': p['u_control'],
-                'f_tune': 0,
-                'p_out': 0,
-                'i_src': 0,
-            } for p in self._processed]
-            pprint_to_file('adjust.ini', self.adjustment)
 
     @property
     def report(self):

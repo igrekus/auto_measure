@@ -155,7 +155,7 @@ class PrimaryPlotWidget(QWidget):
             y = mouse_point.y()
             self._vLine_12.setPos(x)
             self._hLine_12.setPos(y)
-            if not self._curves_11:
+            if not self._curves_12:
                 return
 
             self._stat_label.setText(_label_text(x, y, [
