@@ -169,24 +169,58 @@ class InstrumentController(QObject):
 
         file_name = param['file']
 
-        for u_drift in range(3):
-            for u_control in range(100):
+        rows = [
+            [1, 0, 0],
+            [1, 1, 1],
+            [1, 2, 2],
+            [1, 3, 3],
+            [1, 4, 4],
+            [1, 5, 5],
+            [1, 6, 6],
+            [1, 7, 7],
+            [1, 8, 8],
+            [1, 9, 9],
 
-                if token.cancelled:
-                    raise RuntimeError('measurement cancelled')
+            [2, 0, 1],
+            [2, 1, 2],
+            [2, 2, 3],
+            [2, 3, 4],
+            [2, 4, 5],
+            [2, 5, 6],
+            [2, 6, 7],
+            [2, 7, 8],
+            [2, 8, 9],
+            [2, 9, 10],
 
-                raw_point = {
-                    'u_src': u_drift,
-                    'u_control': u_control,
-                    'read_f': u_control + random.randint(1, 10),
-                    'read_p': u_control + random.randint(10, 20),
-                    'read_i': u_control + random.randint(20, 30),
-                }
+            [3, 0, 2],
+            [3, 1, 3],
+            [3, 2, 4],
+            [3, 3, 5],
+            [3, 4, 6],
+            [3, 5, 7],
+            [3, 6, 8],
+            [3, 7, 9],
+            [3, 8, 10],
+            [3, 9, 11],
+        ]
+        for series, x, y in rows:
 
-                print('measured point:', raw_point)
+            if token.cancelled:
+                raise RuntimeError('measurement cancelled')
 
-                self._add_measure_point(raw_point)
-                time.sleep(0.1)
+            raw_point = {
+                'series': series,
+                'x': x,
+                'y1': y,
+                'y2': y,
+                'y3': y,
+                'y4': y,
+            }
+
+            print('measured point:', raw_point)
+
+            self._add_measure_point(raw_point)
+            time.sleep(0.1)
 
     def _add_measure_point(self, data):
         print('measured point:', data)
