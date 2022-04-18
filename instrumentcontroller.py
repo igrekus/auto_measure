@@ -4,8 +4,10 @@ import time
 
 from collections import defaultdict
 from os.path import isfile
+from pathlib import Path
 
 import numpy as np
+import pandas
 import pandas as pd
 
 from PyQt5.QtCore import QObject, pyqtSlot, pyqtSignal
@@ -167,54 +169,30 @@ class InstrumentController(QObject):
         src = self._instruments['Источник']
         sa = self._instruments['Анализатор']
 
-        file_name = param['file']
+        file_name1 = Path('./tables/plot1.xlsx')
+        file_name2 = Path('./tables/plot2.xlsx')
+        file_name3 = Path('./tables/plot3.xlsx')
+        file_name4 = Path('./tables/plot4.xlsx')
 
-        rows = [
-            [1, 0, 0],
-            [1, 1, 1],
-            [1, 2, 2],
-            [1, 3, 3],
-            [1, 4, 4],
-            [1, 5, 5],
-            [1, 6, 6],
-            [1, 7, 7],
-            [1, 8, 8],
-            [1, 9, 9],
+        df1 = pandas.read_excel(file_name1)
+        df2 = pandas.read_excel(file_name2) if file_name2.is_file() else pandas.DataFrame()
+        df3 = pandas.read_excel(file_name3) if file_name3.is_file() else pandas.DataFrame()
+        df4 = pandas.read_excel(file_name4) if file_name4.is_file() else pandas.DataFrame()
 
-            [2, 0, 1],
-            [2, 1, 2],
-            [2, 2, 3],
-            [2, 3, 4],
-            [2, 4, 5],
-            [2, 5, 6],
-            [2, 6, 7],
-            [2, 7, 8],
-            [2, 8, 9],
-            [2, 9, 10],
+        rows = len(df1)
 
-            [3, 0, 2],
-            [3, 1, 3],
-            [3, 2, 4],
-            [3, 3, 5],
-            [3, 4, 6],
-            [3, 5, 7],
-            [3, 6, 8],
-            [3, 7, 9],
-            [3, 8, 10],
-            [3, 9, 11],
-        ]
-        for series, x, y in rows:
+        for index in range(rows):
 
             if token.cancelled:
                 raise RuntimeError('measurement cancelled')
 
             raw_point = {
-                'series': series,
-                'x': x,
-                'y1': y,
-                'y2': y,
-                'y3': y,
-                'y4': y,
+                'series': df1[df1.columns[0]][index],
+                'x': df1[df1.columns[1]][index],
+                'y1': df1[df1.columns[2]][index],
+                'y2': 0 if df2.empty else df2[df2.columns[2]].get(index, 0),
+                'y3': 0 if df3.empty else df3[df3.columns[2]].get(index, 0),
+                'y4': 0 if df4.empty else df4[df4.columns[2]].get(index, 0),
             }
 
             print('measured point:', raw_point)
