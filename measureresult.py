@@ -50,18 +50,25 @@ class MeasureResult:
         self.ready = True
 
     def _process_point(self, data):
-        series = data['series']
-        x = data['x']
+        series1 = data['series1']
+        series2 = data['series2']
+        series3 = data['series3']
+        series4 = data['series4']
+
+        x1 = data['x1']
+        x2 = data['x2']
+        x3 = data['x3']
+        x4 = data['x4']
 
         y1 = data['y1']
         y2 = data['y2']
         y3 = data['y3']
         y4 = data['y4']
 
-        self.data1[series].append([x, y1])
-        self.data2[series].append([x, y2])
-        self.data3[series].append([x, y3])
-        self.data4[series].append([x, y4])
+        self.data1[series1].append([x1, y1])
+        self.data2[series2].append([x2, y2])
+        self.data3[series3].append([x3, y3])
+        self.data4[series4].append([x4, y4])
 
         self._processed.append({**data})
 

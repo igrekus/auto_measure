@@ -187,11 +187,20 @@ class InstrumentController(QObject):
                 raise RuntimeError('measurement cancelled')
 
             raw_point = {
-                'series': df1[df1.columns[0]][index],
-                'x': df1[df1.columns[1]][index],
+                'series1': df1[df1.columns[0]][index],
+                'x1': df1[df1.columns[1]][index],
                 'y1': df1[df1.columns[2]][index],
+
+                'series2': '' if df2.empty else df2[df2.columns[0]].get(index, 0),
+                'x2': 0 if df2.empty else df2[df2.columns[1]].get(index, 0),
                 'y2': 0 if df2.empty else df2[df2.columns[2]].get(index, 0),
+
+                'series3': '' if df3.empty else df3[df3.columns[0]].get(index, 0),
+                'x3': 0 if df3.empty else df3[df3.columns[1]].get(index, 0),
                 'y3': 0 if df3.empty else df3[df3.columns[2]].get(index, 0),
+
+                'series4': '' if df4.empty else df4[df4.columns[0]].get(index, 0),
+                'x4': 0 if df4.empty else df4[df4.columns[1]].get(index, 0),
                 'y4': 0 if df4.empty else df4[df4.columns[2]].get(index, 0),
             }
 
