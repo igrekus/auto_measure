@@ -1,3 +1,6 @@
+from pathlib import Path
+
+import pandas
 import pyqtgraph as pg
 
 from PyQt5.QtWidgets import QGridLayout, QWidget, QLabel
@@ -33,16 +36,54 @@ class PrimaryPlotWidget(QWidget):
 
         self._plot_00 = self._win.addPlot(row=0, col=0)
         self._plot_01 = self._win.addPlot(row=0, col=1)
-        self._plot_02 = self._win.addPlot(row=0, col=2)
-        self._plot_12 = self._win.addPlot(row=1, col=2)
+        self._plot_10 = self._win.addPlot(row=1, col=0)
+        self._plot_11 = self._win.addPlot(row=1, col=1)
 
         self._curves_00 = dict()
         self._curves_01 = dict()
-        self._curves_02 = dict()
-        self._curves_12 = dict()
+        self._curves_10 = dict()
+        self._curves_11 = dict()
 
-        self._plot_00.setLabel('left', 'Fвых, МГц', **self.label_style)
-        self._plot_00.setLabel('bottom', 'Uупр, В', **self.label_style)
+        file_name1 = Path('./tables/plot1.xlsx')
+        file_name2 = Path('./tables/plot2.xlsx')
+        file_name3 = Path('./tables/plot3.xlsx')
+        file_name4 = Path('./tables/plot4.xlsx')
+
+        df1 = pandas.read_excel(file_name1)
+
+        df2 = pandas.read_excel(file_name2) if file_name2.is_file() else pandas.DataFrame()
+        df3 = pandas.read_excel(file_name3) if file_name3.is_file() else pandas.DataFrame()
+        df4 = pandas.read_excel(file_name4) if file_name4.is_file() else pandas.DataFrame()
+
+        self._labels = [
+            {
+                'left': df1.columns[1],
+                'bottom': df1.columns[2],
+                'prefix': df1.columns[0].split('#')[0],
+                'suffix': df1.columns[0].split('#')[1],
+            },
+            {
+                'left': df2.columns[1],
+                'bottom': df2.columns[2],
+                'prefix': df2.columns[0].split('#')[0],
+                'suffix': df2.columns[0].split('#')[1],
+            },
+            {
+                'left': df3.columns[1],
+                'bottom': df3.columns[2],
+                'prefix': df3.columns[0].split('#')[0],
+                'suffix': df3.columns[0].split('#')[1],
+            },
+            {
+                'left': df4.columns[1],
+                'bottom': df4.columns[2],
+                'prefix': df4.columns[0].split('#')[0],
+                'suffix': df4.columns[0].split('#')[1],
+            },
+        ]
+
+        self._plot_00.setLabel('left', self._labels[0]['left'], **self.label_style)
+        self._plot_00.setLabel('bottom', self._labels[0]['bottom'], **self.label_style)
         self._plot_00.enableAutoRange('x')
         self._plot_00.enableAutoRange('y')
         self._plot_00.showGrid(x=True, y=True)
@@ -55,8 +96,8 @@ class PrimaryPlotWidget(QWidget):
         self._plot_00.addItem(self._hLine_00, ignoreBounds=True)
         self._proxy_00 = pg.SignalProxy(self._plot_00.scene().sigMouseMoved, rateLimit=60, slot=self.mouseMoved_00)
 
-        self._plot_01.setLabel('left', 'Pвых, дБм', **self.label_style)
-        self._plot_01.setLabel('bottom', 'Uупр, В', **self.label_style)
+        self._plot_01.setLabel('left', self._labels[1]['left'], **self.label_style)
+        self._plot_01.setLabel('bottom', self._labels[1]['bottom'], **self.label_style)
         self._plot_01.enableAutoRange('x')
         self._plot_01.enableAutoRange('y')
         self._plot_01.showGrid(x=True, y=True)
@@ -69,33 +110,33 @@ class PrimaryPlotWidget(QWidget):
         self._plot_01.addItem(self._hLine_01, ignoreBounds=True)
         self._proxy_01 = pg.SignalProxy(self._plot_01.scene().sigMouseMoved, rateLimit=60, slot=self.mouseMoved_01)
 
-        self._plot_02.setLabel('left', 'Iп, ма', **self.label_style)
-        self._plot_02.setLabel('bottom', 'Uупр, В', **self.label_style)
-        self._plot_02.enableAutoRange('x')
-        self._plot_02.enableAutoRange('y')
-        self._plot_02.showGrid(x=True, y=True)
-        self._vb_02 = self._plot_02.vb
+        self._plot_10.setLabel('left', self._labels[2]['left'], **self.label_style)
+        self._plot_10.setLabel('bottom', self._labels[2]['bottom'], **self.label_style)
+        self._plot_10.enableAutoRange('x')
+        self._plot_10.enableAutoRange('y')
+        self._plot_10.showGrid(x=True, y=True)
+        self._vb_02 = self._plot_10.vb
         rect = self._vb_02.viewRect()
-        self._plot_02.addLegend(offset=(rect.x() + rect.width() - 50, rect.y() + 30))
+        self._plot_10.addLegend(offset=(rect.x() + rect.width() - 50, rect.y() + 30))
         self._vLine_02 = pg.InfiniteLine(angle=90, movable=False)
         self._hLine_02 = pg.InfiniteLine(angle=0, movable=False)
-        self._plot_02.addItem(self._vLine_02, ignoreBounds=True)
-        self._plot_02.addItem(self._hLine_02, ignoreBounds=True)
-        self._proxy_02 = pg.SignalProxy(self._plot_02.scene().sigMouseMoved, rateLimit=60, slot=self.mouseMoved_02)
+        self._plot_10.addItem(self._vLine_02, ignoreBounds=True)
+        self._plot_10.addItem(self._hLine_02, ignoreBounds=True)
+        self._proxy_02 = pg.SignalProxy(self._plot_10.scene().sigMouseMoved, rateLimit=60, slot=self.mouseMoved_02)
 
-        self._plot_12.setLabel('left', 'Чувств., МГц/В', **self.label_style)
-        self._plot_12.setLabel('bottom', 'Uупр, В', **self.label_style)
-        self._plot_12.enableAutoRange('x')
-        self._plot_12.enableAutoRange('y')
-        self._plot_12.showGrid(x=True, y=True)
-        self._vb_12 = self._plot_12.vb
+        self._plot_11.setLabel('left', self._labels[3]['left'], **self.label_style)
+        self._plot_11.setLabel('bottom', self._labels[3]['bottom'], **self.label_style)
+        self._plot_11.enableAutoRange('x')
+        self._plot_11.enableAutoRange('y')
+        self._plot_11.showGrid(x=True, y=True)
+        self._vb_12 = self._plot_11.vb
         rect = self._vb_12.viewRect()
-        self._plot_12.addLegend(offset=(rect.x() + rect.width() - 50, rect.y() + 30))
+        self._plot_11.addLegend(offset=(rect.x() + rect.width() - 50, rect.y() + 30))
         self._vLine_12 = pg.InfiniteLine(angle=90, movable=False)
         self._hLine_12 = pg.InfiniteLine(angle=0, movable=False)
-        self._plot_12.addItem(self._vLine_12, ignoreBounds=True)
-        self._plot_12.addItem(self._hLine_12, ignoreBounds=True)
-        self._proxy_12 = pg.SignalProxy(self._plot_12.scene().sigMouseMoved, rateLimit=60, slot=self.mouseMoved_12)
+        self._plot_11.addItem(self._vLine_12, ignoreBounds=True)
+        self._plot_11.addItem(self._hLine_12, ignoreBounds=True)
+        self._proxy_12 = pg.SignalProxy(self._plot_11.scene().sigMouseMoved, rateLimit=60, slot=self.mouseMoved_12)
 
         self.setLayout(self._grid)
 
@@ -133,34 +174,34 @@ class PrimaryPlotWidget(QWidget):
 
     def mouseMoved_02(self, event):
         pos = event[0]
-        if self._plot_02.sceneBoundingRect().contains(pos):
+        if self._plot_10.sceneBoundingRect().contains(pos):
             mouse_point = self._vb_02.mapSceneToView(pos)
             x = mouse_point.x()
             y = mouse_point.y()
             self._vLine_02.setPos(x)
             self._hLine_02.setPos(y)
-            if not self._curves_02:
+            if not self._curves_10:
                 return
 
             self._stat_label.setText(_label_text(x, y, [
                 [p, curve.yData[_find_value_index(curve.xData, x)]]
-                for p, curve in self._curves_02.items()
+                for p, curve in self._curves_10.items()
             ]))
 
     def mouseMoved_12(self, event):
         pos = event[0]
-        if self._plot_12.sceneBoundingRect().contains(pos):
+        if self._plot_11.sceneBoundingRect().contains(pos):
             mouse_point = self._vb_12.mapSceneToView(pos)
             x = mouse_point.x()
             y = mouse_point.y()
             self._vLine_12.setPos(x)
             self._hLine_12.setPos(y)
-            if not self._curves_12:
+            if not self._curves_11:
                 return
 
             self._stat_label.setText(_label_text(x, y, [
                 [p, curve.yData[_find_value_index(curve.xData, x)]]
-                for p, curve in self._curves_12.items()
+                for p, curve in self._curves_11.items()
             ]))
 
     def clear(self):
@@ -170,20 +211,20 @@ class PrimaryPlotWidget(QWidget):
 
         _remove_curves(self._plot_00, self._curves_00)
         _remove_curves(self._plot_01, self._curves_01)
-        _remove_curves(self._plot_02, self._curves_02)
-        _remove_curves(self._plot_12, self._curves_12)
+        _remove_curves(self._plot_10, self._curves_10)
+        _remove_curves(self._plot_11, self._curves_11)
 
         self._curves_00.clear()
         self._curves_01.clear()
-        self._curves_02.clear()
-        self._curves_12.clear()
+        self._curves_10.clear()
+        self._curves_11.clear()
 
     def plot(self):
         print('plotting primary stats')
-        _plot_curves(self._controller.result.data1, self._curves_00, self._plot_00, prefix='Uпит= ', suffix=' В')
-        _plot_curves(self._controller.result.data2, self._curves_01, self._plot_01, prefix='Uпит= ', suffix=' В')
-        _plot_curves(self._controller.result.data3, self._curves_02, self._plot_02, prefix='Uпит= ', suffix=' В')
-        _plot_curves(self._controller.result.data4, self._curves_12, self._plot_12, prefix='Uпит= ', suffix=' В')
+        _plot_curves(self._controller.result.data1, self._curves_00, self._plot_00, prefix=self._labels[0]['prefix'], suffix=self._labels[0]['suffix'])
+        _plot_curves(self._controller.result.data2, self._curves_01, self._plot_01, prefix=self._labels[1]['prefix'], suffix=self._labels[1]['suffix'])
+        _plot_curves(self._controller.result.data3, self._curves_10, self._plot_10, prefix=self._labels[2]['prefix'], suffix=self._labels[2]['suffix'])
+        _plot_curves(self._controller.result.data4, self._curves_11, self._plot_11, prefix=self._labels[3]['prefix'], suffix=self._labels[3]['suffix'])
 
 
 def _plot_curves(datas, curves, plot, prefix='', suffix=''):
