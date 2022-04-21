@@ -49,11 +49,14 @@ class PrimaryPlotWidget(QWidget):
         file_name3 = Path('./tables/plot3.xlsx')
         file_name4 = Path('./tables/plot4.xlsx')
 
-        df1 = pandas.read_excel(file_name1)
+        present_2 = file_name2.is_file()
+        present_3 = file_name3.is_file()
+        present_4 = file_name4.is_file()
 
-        df2 = pandas.read_excel(file_name2) if file_name2.is_file() else pandas.DataFrame()
-        df3 = pandas.read_excel(file_name3) if file_name3.is_file() else pandas.DataFrame()
-        df4 = pandas.read_excel(file_name4) if file_name4.is_file() else pandas.DataFrame()
+        df1 = pandas.read_excel(file_name1)
+        df2 = pandas.read_excel(file_name2) if present_2 else None
+        df3 = pandas.read_excel(file_name3) if present_3 else None
+        df4 = pandas.read_excel(file_name4) if present_4 else None
 
         self._labels = [
             {
@@ -63,22 +66,22 @@ class PrimaryPlotWidget(QWidget):
                 'suffix': df1.columns[0].split('#')[1],
             },
             {
-                'left': df2.columns[1],
-                'bottom': df2.columns[2],
-                'prefix': df2.columns[0].split('#')[0],
-                'suffix': df2.columns[0].split('#')[1],
+                'left': df2.columns[1] if present_2 else '',
+                'bottom': df2.columns[2] if present_2 else '',
+                'prefix': df2.columns[0].split('#')[0] if present_2 else '',
+                'suffix': df2.columns[0].split('#')[1] if present_2 else '',
             },
             {
-                'left': df3.columns[1],
-                'bottom': df3.columns[2],
-                'prefix': df3.columns[0].split('#')[0],
-                'suffix': df3.columns[0].split('#')[1],
+                'left': df3.columns[1] if present_3 else '',
+                'bottom': df3.columns[2] if present_3 else '',
+                'prefix': df3.columns[0].split('#')[0] if present_3 else '',
+                'suffix': df3.columns[0].split('#')[1] if present_3 else '',
             },
             {
-                'left': df4.columns[1],
-                'bottom': df4.columns[2],
-                'prefix': df4.columns[0].split('#')[0],
-                'suffix': df4.columns[0].split('#')[1],
+                'left': df4.columns[1] if present_4 else '',
+                'bottom': df4.columns[2] if present_4 else '',
+                'prefix': df4.columns[0].split('#')[0] if present_4 else '',
+                'suffix': df4.columns[0].split('#')[1] if present_4 else '',
             },
         ]
 
@@ -137,6 +140,15 @@ class PrimaryPlotWidget(QWidget):
         self._plot_11.addItem(self._vLine_12, ignoreBounds=True)
         self._plot_11.addItem(self._hLine_12, ignoreBounds=True)
         self._proxy_12 = pg.SignalProxy(self._plot_11.scene().sigMouseMoved, rateLimit=60, slot=self.mouseMoved_12)
+
+        if not present_2:
+            self._plot_01.hide()
+
+        if not present_3:
+            self._plot_10.hide()
+
+        if not present_4:
+            self._plot_11.hide()
 
         self.setLayout(self._grid)
 
