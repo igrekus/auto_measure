@@ -49,6 +49,7 @@ class PrimaryPlotWidget(QWidget):
         file_name3 = Path('./tables/plot3.xlsx')
         file_name4 = Path('./tables/plot4.xlsx')
 
+        present_1 = file_name1.is_file()
         present_2 = file_name2.is_file()
         present_3 = file_name3.is_file()
         present_4 = file_name4.is_file()
@@ -60,12 +61,11 @@ class PrimaryPlotWidget(QWidget):
 
         self._labels = [
             {
-                'left': df1.columns[1],
-                'bottom': df1.columns[2],
-                'prefix': df1.columns[0].split('#')[0],
-                'suffix': df1.columns[0].split('#')[1],
-            },
-            {
+                'left': df1.columns[1] if present_1 else '',
+                'bottom': df1.columns[2] if present_1 else '',
+                'prefix': df1.columns[0].split('#')[0] if present_1 else '',
+                'suffix': df1.columns[0].split('#')[1] if present_1 else '',
+            },            {
                 'left': df2.columns[1] if present_2 else '',
                 'bottom': df2.columns[2] if present_2 else '',
                 'prefix': df2.columns[0].split('#')[0] if present_2 else '',
@@ -140,6 +140,9 @@ class PrimaryPlotWidget(QWidget):
         self._plot_11.addItem(self._vLine_12, ignoreBounds=True)
         self._plot_11.addItem(self._hLine_12, ignoreBounds=True)
         self._proxy_12 = pg.SignalProxy(self._plot_11.scene().sigMouseMoved, rateLimit=60, slot=self.mouseMoved_12)
+
+        if not present_1:
+            self._plot_01.hide()
 
         if not present_2:
             self._plot_01.hide()
